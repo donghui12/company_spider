@@ -49,7 +49,8 @@ class Spider(object):
 
         try:
             reg_qcc_link = r'/firm/[A-Z0-9]{7}\.shtml'
-            qcc_link = self.qcc_base_url + re.search(reg_qcc_link, text).group(0)
+            pri_key = re.search(reg_qcc_link, text).group(0)
+            qcc_link = self.qcc_base_url + pri_key
         except AttributeError as e:
             print(e)
             qcc_link = 'https://lovejdh.cn'
@@ -84,7 +85,8 @@ class Spider(object):
             location = '火星'
         
         data = company_name+' '+phone+' '+email+' '+website+' '+location+' '+qcc_link
-        return data
+        item = (pri_key, company_name, phone, email, website, location, qcc_link)
+        return item
     
     def parse_company_page(self, url):
         resp = requests.get(url, headers=HEADERS)
@@ -116,7 +118,8 @@ class Spider(object):
         """
             插入
         """
-        basic_insert_sql = "INSER INTO 'company' ('name', 'phone', 'email', 'wensite', 'location') VALUES (%s, %s, %s, %s, %s)"
+        basic_insert_sql = "INSER INTO 'company' ('pri_key', 'name', \
+            'phone', 'email', 'wensite', 'location', 'qcc_link') VALUES (%s, %s, %s, %s, %s, %s, %s)"
         full_insert_sql = "INSER INTO company "
         sql = basic_insert_sql
         if not is_basic: sql = full_insert_sql
@@ -137,9 +140,11 @@ class Spider(object):
     
     def run(self):
         companies = self.load_company('company.txt')
+        self.connetc_mysql()
         for company in companies:
             data = self.parse_search_page(company)
-            self.save(data)
+            self.insert(item)
+            # self.save(data)
             print('company {} seccessful'.format(company.replace('\n','')))
         
 if __name__ == "__main__":
