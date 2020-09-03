@@ -41,6 +41,7 @@ class Spider(object):
         search_url = self.base_search_url.format(company_name)
         resp = requests.get(search_url, headers=HEADERS)
         text = resp.text
+
         html = etree.HTML(text)
         
         origin_first_part = html.xpath('//*[@id="search-result"]/tr[1]/td[3]')[0].xpath('string(.)')
@@ -139,10 +140,10 @@ class Spider(object):
         for company in companies:
             data = self.parse_search_page(company)
             self.save(data)
-            print('company {} seccessful'.format(company))
+            print('company {} seccessful'.format(company.replace('\n','')))
         
 if __name__ == "__main__":
     spider = Spider()
-    # spider.run()
-    company_url = 'https://www.qcc.com/firm/14ED4W1.shtml'
-    spider.parse_company_page(company_url)
+    spider.run()
+    # company_url = 'https://www.qcc.com/firm/14ED4W1.shtml'
+    # spider.parse_company_page(company_url)
