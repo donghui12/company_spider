@@ -37,12 +37,10 @@ class Spider(object):
             companies = f.readlines()
         return companies
     
-    def search_with_qichacha(self, keyword):
-        search_url = self.base_search_url.format(keyword)
+    def parse_search_page(self, company_name):
+        search_url = self.base_search_url.format(company_name)
         resp = requests.get(search_url, headers=HEADERS)
-        return resp.text
-    
-    def process_company(self, text, company_name):
+        text = resp.text
         html = etree.HTML(text)
         
         origin_first_part = html.xpath('//*[@id="search-result"]/tr[1]/td[3]')[0].xpath('string(.)')
@@ -87,6 +85,21 @@ class Spider(object):
         data = company_name+' '+phone+' '+email+' '+website+' '+location+' '+qcc_link
         return data
     
+    def parse_company_page(self, url):
+        resp = requests.get(url, headers=HEADERS)
+        text = resp.text.replace('\n','')
+        
+        first_part = re.search('<section class="panel b-a" id="branchelist">(.*?)</section>', text).group(0)
+        reg_qcc_link = r'/firm/[a-z0-9]{32}\.html'
+        qcc_link = re.findall(reg_qcc_link, first_part)
+        
+        links = set()
+        for link in qcc_link:
+            link = self.qcc_base_url + link
+            links.add(link)
+        
+        return links
+    
     def connetc_mysql(self):
         """
             链接数据库
@@ -124,12 +137,12 @@ class Spider(object):
     def run(self):
         companies = self.load_company('company.txt')
         for company in companies:
-            search_result = self.search_with_qichacha(company)
-            data = self.process_company(search_result, company)
+            data = self.parse_search_page(company)
             self.save(data)
             print('company {} seccessful'.format(company))
         
-
 if __name__ == "__main__":
     spider = Spider()
-    spider.run()
+    # spider.run()
+    company_url = 'https://www.qcc.com/firm/14ED4W1.shtml'
+    spider.parse_company_page(company_url)
