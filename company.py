@@ -26,10 +26,10 @@ class Spider(object):
     def __init__(self):
         self.base_search_url = 'https://www.qcc.com/search?key={}'
         
-        self.HOST = 'locahost'
-        self.USER = 'root'
-        self.PASSWD = 'Fuck_you'
-        self.DATABASE = 'company'
+        self.HOST = 'localhost'
+        self.USER = 'spider'
+        self.PASSWD = 'jdh%sql&&Q1W2E3'
+        self.DATABASE = 'spider'
         self.qcc_base_url = 'https://www.qcc.com'
 
     def load_company(self, company_path):
