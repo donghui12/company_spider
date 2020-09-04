@@ -18,15 +18,23 @@ def load_cookie(cookie_path):
     return cookie
 
 HEADERS = {
+    'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+    'accept-encoding': 'gzip, deflate, br',    
+    'accept-language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+    'sec-fetch-dest': 'document',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-site': 'same-origin',
+    'sec-fetch-user': '?1',
     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36',
     'cookie':load_cookie('./cookies.txt'),
+    'referer': 'https://www.qcc.com/user_login?back=%2Ffirm%2F14ED4W1.shtml',
 }
 
 class Spider(object):
     def __init__(self):
         self.base_search_url = 'https://www.qcc.com/search?key={}'
         
-        self.HOST = 'localhost'
+        self.HOST = '47.112.46.211'
         self.USER = 'spider'
         self.PASSWD = 'jdh%sql&&Q1W2E3'
         self.DATABASE = 'spider'
@@ -41,7 +49,6 @@ class Spider(object):
         search_url = self.base_search_url.format(company_name)
         resp = requests.get(search_url, headers=HEADERS)
         text = resp.text
-
         html = etree.HTML(text)
         
         origin_first_part = html.xpath('//*[@id="search-result"]/tr[1]/td[3]')[0].xpath('string(.)')
