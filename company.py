@@ -7,9 +7,11 @@
     @版本    :1.0
 '''
 import re
-import requests
 import pymysql
+import requests
 from lxml import etree
+from time import sleep
+from random import choice
 
 
 def load_cookie(cookie_path):
@@ -56,8 +58,9 @@ class Spider(object):
 
         try:
             reg_qcc_link = r'/firm/[A-Z0-9]{7}\.shtml'
-            pri_key = re.search(reg_qcc_link, text).group(0)
-            qcc_link = self.qcc_base_url + pri_key
+            pri_key_url = re.search(reg_qcc_link, text).group(0)
+            pri_key = re.search(r'([A-Z0-9]{7})', pri_key_url).group(0)
+            qcc_link = self.qcc_base_url + pri_key_url
         except AttributeError as e:
             print(e)
             qcc_link = 'https://lovejdh.cn'
@@ -66,21 +69,23 @@ class Spider(object):
             reg_phone = r"电话：AJDH([\d-]{12,13})AJDH"
             phone = re.findall(reg_phone, first_part)[0] # 正则匹配电话
         except IndexError as e:
-            print(e)
+            print('reg_phone error', e)
             self.debug_save(first_part, company_name)
             phone = '0000000000000'
         
         try:
             reg_email = r'(?:[0-9a-zA-Z_]+.)+@[0-9a-zA-Z]{1,13}\.[com,cn,net]{1,3}' #正则匹配出邮箱
-            email = re.findall(reg_email, first_part)[0].replace('AJDH','')
+            email = re.findall(reg_email, origin_first_part)[0].replace('AJDH','')
         except IndexError:
+            print('reg_email error')
             self.debug_save(first_part, company_name)
             email = '000@000.com'
         
         try:
-            website = re.search('官网：AJDH([http://|www].*?)AJDH', first_part).group(0)
+            website = re.search('官网：AJDH([http://|www|WWW].*?)AJDH', first_part).group(0)
             website = re.sub('AJDH|官网：', '', website)
         except AttributeError:
+            print('reg website error')
             self.debug_save(first_part, company_name)
             website = 'http://lovejdh.cn'
         
@@ -88,6 +93,7 @@ class Spider(object):
             location = re.search('地址：(.*?)AJDH', first_part).group(0)
             location = re.sub('AJDH|地址：', '', location)
         except AttributeError:
+            print('location error')
             self.debug_save(first_part, company_name)
             location = '火星'
         
@@ -125,14 +131,17 @@ class Spider(object):
         """
             插入
         """
-        basic_insert_sql = "INSER INTO 'company_level_one' ('pri_key', 'name', \
-            'phone', 'email', 'website', 'location', 'qcc_link') VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        basic_insert_sql = "INSERT INTO `spider`.`company_level_one`(`pri_key`, `name`, `phone`, `email`, `website`, `location`, `qcc_link`) VALUES\
+             ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}')"
         full_insert_sql = "INSER INTO company "
         sql = basic_insert_sql
         if not is_basic: sql = full_insert_sql
-        sql = basic_insert_sql
-        self.curson.execute(sql, item)
-        self.db.commit()
+        try:
+            self.curson.execute(sql.format(item[0], item[1], item[2], item[3], item[4], item[5], item[6]))
+            self.db.commit()
+        except Exception as e:
+            print(e)
+            pass
     
     def save(self, line):
         line = line.replace('\n', '')
@@ -149,10 +158,21 @@ class Spider(object):
         companies = self.load_company('company.txt')
         self.connetc_mysql()
         for company in companies:
-            item = self.parse_search_page(company)
-            self.insert(item)
-            # self.save(data)
-            print('company {} seccessful'.format(company.replace('\n','')))
+            company_name = company.replace('\n', '')
+            sleep_time = choice(list(range(1, 8)))
+            sleep(sleep_time)    
+            try:
+                item = self.parse_search_page(company_name)
+            except IndexError:
+                with open('fialed.txt', 'a', encoding='utf-8') as f:
+                    f.write(company)
+                print('please update cookies')
+                continue
+            else:
+                self.insert(item)
+                # self.save(data)
+                print('company {} seccessful'.format(company_name))
+        self.curson.close()
         
 if __name__ == "__main__":
     spider = Spider()
