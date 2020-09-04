@@ -125,8 +125,8 @@ class Spider(object):
         """
             插入
         """
-        basic_insert_sql = "INSER INTO 'company' ('pri_key', 'name', \
-            'phone', 'email', 'wensite', 'location', 'qcc_link') VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        basic_insert_sql = "INSER INTO 'company_level_one' ('pri_key', 'name', \
+            'phone', 'email', 'website', 'location', 'qcc_link') VALUES (%s, %s, %s, %s, %s, %s, %s)"
         full_insert_sql = "INSER INTO company "
         sql = basic_insert_sql
         if not is_basic: sql = full_insert_sql
