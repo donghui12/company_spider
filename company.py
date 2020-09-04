@@ -149,7 +149,7 @@ class Spider(object):
         companies = self.load_company('company.txt')
         self.connetc_mysql()
         for company in companies:
-            data = self.parse_search_page(company)
+            item = self.parse_search_page(company)
             self.insert(item)
             # self.save(data)
             print('company {} seccessful'.format(company.replace('\n','')))
